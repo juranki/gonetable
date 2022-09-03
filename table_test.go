@@ -6,7 +6,7 @@ import (
 	"github.com/juranki/gonetable"
 )
 
-func TestNewTableName(t *testing.T) {
+func TestNewInvalidInput(t *testing.T) {
 	_, err := gonetable.New("", []gonetable.RecordType{})
 	if err != gonetable.ShortNameError {
 		t.Fatal("expected too short")
@@ -19,5 +19,12 @@ func TestNewTableName(t *testing.T) {
 	if err != gonetable.InvalidCharError {
 		t.Fatal("expected invalid character")
 	}
-
+	_, err = gonetable.New("asdf", []gonetable.RecordType{})
+	if err != gonetable.NoRecTypesError {
+		t.Fatal("expected norecordtypeerror")
+	}
+	_, err = gonetable.New("asdf", nil)
+	if err != gonetable.NoRecTypesError {
+		t.Fatal("expected norecordtypeerror")
+	}
 }
