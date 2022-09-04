@@ -81,7 +81,7 @@ type Document interface {
 }
 ```
 
-## type [Schema](<https://github.com/juranki/gonetable/blob/main/schema.go#L20-L23>)
+## type [Schema](<https://github.com/juranki/gonetable/blob/main/schema.go#L22-L25>)
 
 ```go
 type Schema struct {
@@ -89,25 +89,25 @@ type Schema struct {
 }
 ```
 
-### func [NewSchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L25>)
+### func [NewSchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L27>)
 
 ```go
 func NewSchema(docSamples []Document) (*Schema, error)
 ```
 
-### func \(\*Schema\) [AttributeDefinitions](<https://github.com/juranki/gonetable/blob/main/schema.go#L60>)
+### func \(\*Schema\) [AttributeDefinitions](<https://github.com/juranki/gonetable/blob/main/schema.go#L62>)
 
 ```go
 func (s *Schema) AttributeDefinitions() []types.AttributeDefinition
 ```
 
-### func \(\*Schema\) [GlobalSecondaryIndexes](<https://github.com/juranki/gonetable/blob/main/schema.go#L65>)
+### func \(\*Schema\) [GlobalSecondaryIndexes](<https://github.com/juranki/gonetable/blob/main/schema.go#L73>)
 
 ```go
 func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex
 ```
 
-### func \(\*Schema\) [KeySchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L70>)
+### func \(\*Schema\) [KeySchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L78>)
 
 ```go
 func (s *Schema) KeySchema() []types.KeySchemaElement

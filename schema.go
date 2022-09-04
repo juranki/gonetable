@@ -2,9 +2,11 @@ package gonetable
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"regexp"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
@@ -58,8 +60,14 @@ func NewSchema(docSamples []Document) (*Schema, error) {
 }
 
 func (s *Schema) AttributeDefinitions() []types.AttributeDefinition {
-	// return []types.AttributeDefinition{}
-	panic("not implemented")
+	rv := makeIndexAttributes("PK", "SK")
+	for _, idx := range s.indeces {
+		rv = append(rv, makeIndexAttributes(
+			fmt.Sprintf("%sPK", idx),
+			fmt.Sprintf("%sSK", idx),
+		)...)
+	}
+	return rv
 }
 
 func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex {
@@ -90,4 +98,17 @@ func getIndexNames(documentType reflect.Type) []string {
 		}
 	}
 	return indeces
+}
+
+func makeIndexAttributes(pk, sk string) []types.AttributeDefinition {
+	return []types.AttributeDefinition{
+		{
+			AttributeName: aws.String(pk),
+			AttributeType: types.ScalarAttributeTypeS,
+		},
+		{
+			AttributeName: aws.String(sk),
+			AttributeType: types.ScalarAttributeTypeS,
+		},
+	}
 }
