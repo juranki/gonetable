@@ -17,9 +17,10 @@ For more information about single table design see https://youtu.be/HaEPXoXVf2k
 - [type CompositeKey](<#type-compositekey>)
 - [type Document](<#type-document>)
 - [type Schema](<#type-schema>)
-- [type Table](<#type-table>)
-  - [func New(schema *Schema) (*Table, error)](<#func-new>)
-  - [func (table *Table) GetCreateTableInput() *dynamodb.CreateTableInput](<#func-table-getcreatetableinput>)
+  - [func NewSchema(docSamples []Document) (*Schema, error)](<#func-newschema>)
+  - [func (s *Schema) AttributeDefinitions() []types.AttributeDefinition](<#func-schema-attributedefinitions>)
+  - [func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex](<#func-schema-globalsecondaryindexes>)
+  - [func (s *Schema) KeySchema() []types.KeySchemaElement](<#func-schema-keyschema>)
 
 
 ## Variables
@@ -34,10 +35,9 @@ var (
 
 ```go
 var (
-    ErrNoRecTypes  = errors.New("at least one record type required")
-    ErrShortName   = errors.New("table name too short (min: 3)")
-    ErrLongName    = errors.New("table name too long (max: 255)")
-    ErrInvalidChar = errors.New("invalid character in tablename (required pattern: [a-zA-Z0-9_.-]+)")
+    ErrNoDocSamples    = errors.New("at least one document sample required")
+    ErrDuplicateTypeID = errors.New("multiple document samples with same type id")
+    ErrIndexName       = errors.New("invalid index name, must match ^[a-zA-Z0-9_.-]{3,255}$")
 )
 ```
 
@@ -56,7 +56,7 @@ type CompositeKey struct {
 }
 ```
 
-## type [Document](<https://github.com/juranki/gonetable/blob/main/table.go#L31-L34>)
+## type [Document](<https://github.com/juranki/gonetable/blob/main/document.go#L17-L20>)
 
 Implement Document interface for the structs you want to store to the DDB table.
 
@@ -81,35 +81,36 @@ type Document interface {
 }
 ```
 
-## type [Schema](<https://github.com/juranki/gonetable/blob/main/table.go#L35-L38>)
+## type [Schema](<https://github.com/juranki/gonetable/blob/main/schema.go#L20-L23>)
 
 ```go
 type Schema struct {
-    Tablename   string
-    RecordTypes map[string]Document
-}
-```
-
-## type [Table](<https://github.com/juranki/gonetable/blob/main/table.go#L39-L41>)
-
-```go
-type Table struct {
     // contains filtered or unexported fields
 }
 ```
 
-### func [New](<https://github.com/juranki/gonetable/blob/main/table.go#L44>)
+### func [NewSchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L25>)
 
 ```go
-func New(schema *Schema) (*Table, error)
+func NewSchema(docSamples []Document) (*Schema, error)
 ```
 
-New table
-
-### func \(\*Table\) [GetCreateTableInput](<https://github.com/juranki/gonetable/blob/main/table_create.go#L25>)
+### func \(\*Schema\) [AttributeDefinitions](<https://github.com/juranki/gonetable/blob/main/schema.go#L60>)
 
 ```go
-func (table *Table) GetCreateTableInput() *dynamodb.CreateTableInput
+func (s *Schema) AttributeDefinitions() []types.AttributeDefinition
+```
+
+### func \(\*Schema\) [GlobalSecondaryIndexes](<https://github.com/juranki/gonetable/blob/main/schema.go#L65>)
+
+```go
+func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex
+```
+
+### func \(\*Schema\) [KeySchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L70>)
+
+```go
+func (s *Schema) KeySchema() []types.KeySchemaElement
 ```
 
 
