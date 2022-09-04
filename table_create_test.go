@@ -8,23 +8,23 @@ import (
 	"github.com/juranki/gonetable"
 )
 
-type SimpleRecord struct {
+type SimpleDocument struct {
 	Name string
 }
 
-func (sr *SimpleRecord) GoneTable_Key() gonetable.CompositeKey {
+func (sr *SimpleDocument) Gonetable_Key() gonetable.CompositeKey {
 	return gonetable.CompositeKey{
 		HashSegments:  []string{"sr", "a"},
 		RangeSegments: []string{"sr"},
 	}
 }
-func (sr *SimpleRecord) GoneTable_Prefix() string { return "SR" }
+func (sr *SimpleDocument) Gonetable_TypeID() string { return "SR" }
 
 func TestTable_GetCreateTableInputHasTablename(t *testing.T) {
 	table, err := gonetable.New(&gonetable.Schema{
 		Tablename: "tablename",
 		RecordTypes: map[string]gonetable.Document{
-			"SR": &SimpleRecord{},
+			"SR": &SimpleDocument{},
 		},
 	})
 	if err != nil {
@@ -41,7 +41,7 @@ func TestTable_GetCreateTableInputHasAttributes(t *testing.T) {
 	table, err := gonetable.New(&gonetable.Schema{
 		Tablename: "tablename",
 		RecordTypes: map[string]gonetable.Document{
-			"SR": &SimpleRecord{},
+			"SR": &SimpleDocument{},
 		},
 	})
 	if err != nil {
