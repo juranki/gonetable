@@ -23,7 +23,7 @@ func (sr *SimpleRecord) GoneTable_Prefix() string { return "SR" }
 func TestTable_GetCreateTableInputHasTablename(t *testing.T) {
 	table, err := gonetable.New(&gonetable.Schema{
 		Tablename: "tablename",
-		RecordTypes: map[string]gonetable.RecordType{
+		RecordTypes: map[string]gonetable.Document{
 			"SR": &SimpleRecord{},
 		},
 	})
@@ -40,7 +40,7 @@ func TestTable_GetCreateTableInputHasTablename(t *testing.T) {
 func TestTable_GetCreateTableInputHasAttributes(t *testing.T) {
 	table, err := gonetable.New(&gonetable.Schema{
 		Tablename: "tablename",
-		RecordTypes: map[string]gonetable.RecordType{
+		RecordTypes: map[string]gonetable.Document{
 			"SR": &SimpleRecord{},
 		},
 	})

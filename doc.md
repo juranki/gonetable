@@ -15,7 +15,7 @@ For more information about single table design see https://youtu.be/HaEPXoXVf2k
 - [Variables](<#variables>)
 - [func JoinKeySegments(segments []string) (string, error)](<#func-joinkeysegments>)
 - [type CompositeKey](<#type-compositekey>)
-- [type RecordType](<#type-recordtype>)
+- [type Document](<#type-document>)
 - [type Schema](<#type-schema>)
 - [type Table](<#type-table>)
   - [func New(schema *Schema) (*Table, error)](<#func-new>)
@@ -56,25 +56,41 @@ type CompositeKey struct {
 }
 ```
 
-## type [RecordType](<https://github.com/juranki/gonetable/blob/main/table.go#L17-L20>)
+## type [Document](<https://github.com/juranki/gonetable/blob/main/table.go#L31-L34>)
+
+Implement Document interface for the structs you want to store to the DDB table.
+
+There are two required methods:
+
+```
+Gonetable_Key() returns the key that uniquely identifies the document.
+Gonetable_TypeID() returns a string that specifies the type of the document.
+```
+
+TODO: Additionally you can specify other functions with Gonetable\_ \-prefix to specify additional indexes, and fields that are computed when document is saved:
+
+```
+Gonetable_[Indexname]Key() returns composite key for additional index
+Gonetable_Computed[Fieldname]() returns value for a computed field
+```
 
 ```go
-type RecordType interface {
-    GoneTable_Key() CompositeKey
-    GoneTable_Prefix() string
+type Document interface {
+    Gonetable_Key() CompositeKey
+    Gonetable_TypeID() string
 }
 ```
 
-## type [Schema](<https://github.com/juranki/gonetable/blob/main/table.go#L21-L24>)
+## type [Schema](<https://github.com/juranki/gonetable/blob/main/table.go#L35-L38>)
 
 ```go
 type Schema struct {
     Tablename   string
-    RecordTypes map[string]RecordType
+    RecordTypes map[string]Document
 }
 ```
 
-## type [Table](<https://github.com/juranki/gonetable/blob/main/table.go#L25-L27>)
+## type [Table](<https://github.com/juranki/gonetable/blob/main/table.go#L39-L41>)
 
 ```go
 type Table struct {
@@ -82,7 +98,7 @@ type Table struct {
 }
 ```
 
-### func [New](<https://github.com/juranki/gonetable/blob/main/table.go#L30>)
+### func [New](<https://github.com/juranki/gonetable/blob/main/table.go#L44>)
 
 ```go
 func New(schema *Schema) (*Table, error)

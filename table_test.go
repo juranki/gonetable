@@ -33,7 +33,7 @@ func TestNewInvalidInput(t *testing.T) {
 	}
 	_, err = gonetable.New(&gonetable.Schema{
 		Tablename:   "asdf",
-		RecordTypes: map[string]gonetable.RecordType{},
+		RecordTypes: map[string]gonetable.Document{},
 	})
 	if err != gonetable.ErrNoRecTypes {
 		t.Fatal("expected norecordtypeerror")
