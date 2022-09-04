@@ -59,6 +59,8 @@ func NewSchema(docSamples []Document) (*Schema, error) {
 	return &s, nil
 }
 
+// Returns attribute definitions for all partition and sort keys fields
+// of the table and GSIs
 func (s *Schema) AttributeDefinitions() []types.AttributeDefinition {
 	rv := makeIndexAttributes("PK", "SK")
 	for _, idx := range s.indeces {
@@ -70,23 +72,43 @@ func (s *Schema) AttributeDefinitions() []types.AttributeDefinition {
 	return rv
 }
 
+// Returns definitions for GSIs
 func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex {
-	// return []types.GlobalSecondaryIndex{}
-	panic("not implemented")
+	rv := []types.GlobalSecondaryIndex{}
+	for _, idx := range s.indeces {
+		rv = append(rv, types.GlobalSecondaryIndex{
+			IndexName: aws.String(idx),
+			KeySchema: []types.KeySchemaElement{
+				{
+					AttributeName: aws.String(fmt.Sprintf("%sPK", idx)),
+					KeyType:       types.KeyTypeHash,
+				},
+				{
+					AttributeName: aws.String(fmt.Sprintf("%sSK", idx)),
+					KeyType:       types.KeyTypeRange,
+				},
+			},
+			Projection: &types.Projection{
+				ProjectionType: types.ProjectionTypeAll,
+			},
+		})
+	}
+	return rv
 }
 
+// Returns key schema that is always the same.
+// Hash and range keys named PK and SK.
 func (s *Schema) KeySchema() []types.KeySchemaElement {
-	panic("not implemented")
-	// return []types.KeySchemaElement{
-	// 	{
-	// 		AttributeName: aws.String("PK"),
-	// 		KeyType:       types.KeyTypeHash,
-	// 	},
-	// 	{
-	// 		AttributeName: aws.String("SK"),
-	// 		KeyType:       types.KeyTypeRange,
-	// 	},
-	// }
+	return []types.KeySchemaElement{
+		{
+			AttributeName: aws.String("PK"),
+			KeyType:       types.KeyTypeHash,
+		},
+		{
+			AttributeName: aws.String("SK"),
+			KeyType:       types.KeyTypeRange,
+		},
+	}
 }
 
 func getIndexNames(documentType reflect.Type) []string {

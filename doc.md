@@ -95,23 +95,29 @@ type Schema struct {
 func NewSchema(docSamples []Document) (*Schema, error)
 ```
 
-### func \(\*Schema\) [AttributeDefinitions](<https://github.com/juranki/gonetable/blob/main/schema.go#L62>)
+### func \(\*Schema\) [AttributeDefinitions](<https://github.com/juranki/gonetable/blob/main/schema.go#L64>)
 
 ```go
 func (s *Schema) AttributeDefinitions() []types.AttributeDefinition
 ```
 
-### func \(\*Schema\) [GlobalSecondaryIndexes](<https://github.com/juranki/gonetable/blob/main/schema.go#L73>)
+Returns attribute definitions for all partition and sort keys fields of the table and GSIs
+
+### func \(\*Schema\) [GlobalSecondaryIndexes](<https://github.com/juranki/gonetable/blob/main/schema.go#L76>)
 
 ```go
 func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex
 ```
 
-### func \(\*Schema\) [KeySchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L78>)
+Returns definitions for GSIs
+
+### func \(\*Schema\) [KeySchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L101>)
 
 ```go
 func (s *Schema) KeySchema() []types.KeySchemaElement
 ```
+
+Returns key schema that is always the same. Hash and range keys named PK and SK.
 
 
 

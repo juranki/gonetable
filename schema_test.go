@@ -35,7 +35,7 @@ func TestNewSchema(t *testing.T) {
 			wantErr: gonetable.ErrNoDocSamples,
 		},
 		{
-			name: "no doc samples",
+			name: "duplicate type id",
 			args: args{
 				docSamples: []gonetable.Document{&InvalidIndex{}, &InvalidIndex{}},
 			},
@@ -94,7 +94,7 @@ func TestSchema_AttributeDefinitions(t *testing.T) {
 			},
 		},
 		{
-			name:       "minimal",
+			name:       "withIndex",
 			docSamples: []gonetable.Document{&WithIndex{}},
 			want: []types.AttributeDefinition{
 				{
@@ -126,6 +126,87 @@ func TestSchema_AttributeDefinitions(t *testing.T) {
 				json.NewEncoder(os.Stdout).Encode(got)
 				json.NewEncoder(os.Stdout).Encode(tt.want)
 				t.Errorf("Schema.AttributeDefinitions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSchema_KeySchema(t *testing.T) {
+	tests := []struct {
+		name       string
+		docSamples []gonetable.Document
+		want       []types.KeySchemaElement
+	}{
+		{
+			name:       "minimal",
+			docSamples: []gonetable.Document{&MinimalDoc{}},
+			want: []types.KeySchemaElement{
+				{
+					AttributeName: aws.String("PK"),
+					KeyType:       types.KeyTypeHash,
+				},
+				{
+					AttributeName: aws.String("SK"),
+					KeyType:       types.KeyTypeRange,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s, err := gonetable.NewSchema(tt.docSamples)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := s.KeySchema(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Schema.KeySchema() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSchema_GlobalSecondaryIndexes(t *testing.T) {
+	tests := []struct {
+		name       string
+		docSamples []gonetable.Document
+		want       []types.GlobalSecondaryIndex
+	}{
+		{
+			name:       "minimal",
+			docSamples: []gonetable.Document{&MinimalDoc{}},
+			want:       []types.GlobalSecondaryIndex{},
+		},
+		{
+			name:       "with index",
+			docSamples: []gonetable.Document{&WithIndex{}},
+			want: []types.GlobalSecondaryIndex{
+				{
+					IndexName: aws.String("GSI1"),
+					KeySchema: []types.KeySchemaElement{
+						{
+							AttributeName: aws.String("GSI1PK"),
+							KeyType:       types.KeyTypeHash,
+						},
+						{
+							AttributeName: aws.String("GSI1SK"),
+							KeyType:       types.KeyTypeRange,
+						},
+					},
+					Projection: &types.Projection{
+						ProjectionType: types.ProjectionTypeAll,
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s, err := gonetable.NewSchema(tt.docSamples)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := s.GlobalSecondaryIndexes(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Schema.GlobalSecondaryIndexes() = %v, want %v", got, tt.want)
 			}
 		})
 	}
