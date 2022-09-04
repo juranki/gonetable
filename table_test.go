@@ -7,24 +7,35 @@ import (
 )
 
 func TestNewInvalidInput(t *testing.T) {
-	_, err := gonetable.New("", []gonetable.RecordType{})
-	if err != gonetable.ShortNameError {
+	_, err := gonetable.New(&gonetable.Schema{
+		Tablename: "a",
+	})
+	if err != gonetable.ErrShortName {
 		t.Fatal("expected too short")
 	}
-	_, err = gonetable.New("01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789", []gonetable.RecordType{})
-	if err != gonetable.LongNameError {
+	_, err = gonetable.New(&gonetable.Schema{
+		Tablename: "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789",
+	})
+	if err != gonetable.ErrLongName {
 		t.Fatal("expected too long")
 	}
-	_, err = gonetable.New("asdf(", []gonetable.RecordType{})
-	if err != gonetable.InvalidCharError {
+	_, err = gonetable.New(&gonetable.Schema{
+		Tablename: "asdf(",
+	})
+	if err != gonetable.ErrInvalidChar {
 		t.Fatal("expected invalid character")
 	}
-	_, err = gonetable.New("asdf", []gonetable.RecordType{})
-	if err != gonetable.NoRecTypesError {
+	_, err = gonetable.New(&gonetable.Schema{
+		Tablename: "asdf",
+	})
+	if err != gonetable.ErrNoRecTypes {
 		t.Fatal("expected norecordtypeerror")
 	}
-	_, err = gonetable.New("asdf", nil)
-	if err != gonetable.NoRecTypesError {
+	_, err = gonetable.New(&gonetable.Schema{
+		Tablename:   "asdf",
+		RecordTypes: map[string]gonetable.RecordType{},
+	})
+	if err != gonetable.ErrNoRecTypes {
 		t.Fatal("expected norecordtypeerror")
 	}
 }

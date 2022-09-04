@@ -6,48 +6,49 @@ import (
 )
 
 var (
-	NoRecTypesError  = errors.New("at least one record type required")
-	ShortNameError   = errors.New("table name too short (min: 3)")
-	LongNameError    = errors.New("table name too long (max: 255)")
-	InvalidCharError = errors.New("invalid character in tablename (required pattern: [a-zA-Z0-9_.-]+)")
-
-	KeyDelimiter = "#"
+	ErrNoRecTypes  = errors.New("at least one record type required")
+	ErrShortName   = errors.New("table name too short (min: 3)")
+	ErrLongName    = errors.New("table name too long (max: 255)")
+	ErrInvalidChar = errors.New("invalid character in tablename (required pattern: [a-zA-Z0-9_.-]+)")
 
 	re = regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`)
 )
 
 type RecordType interface {
-	KeyPrefix() string
+	GoneTable_Key() CompositeKey
+	GoneTable_Prefix() string
+}
+type Schema struct {
+	Tablename   string
+	RecordTypes map[string]RecordType
 }
 type Table struct {
-	name  string
-	types []RecordType
+	schema *Schema
 }
 
 // New table
-func New(name string, types []RecordType) (*Table, error) {
-	if nameError := checkTablename(name); nameError != nil {
+func New(schema *Schema) (*Table, error) {
+	if nameError := checkTablename(schema.Tablename); nameError != nil {
 		return nil, nameError
 	}
-	if len(types) == 0 {
-		return nil, NoRecTypesError
+	if len(schema.RecordTypes) == 0 {
+		return nil, ErrNoRecTypes
 	}
 	return &Table{
-		name:  name,
-		types: types,
+		schema: schema,
 	}, nil
 }
 
 func checkTablename(name string) error {
 	// https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateTable.html#API_CreateTable_RequestSyntax
 	if len(name) < 3 {
-		return ShortNameError
+		return ErrShortName
 	}
 	if len(name) > 255 {
-		return LongNameError
+		return ErrLongName
 	}
 	if !re.MatchString(name) {
-		return InvalidCharError
+		return ErrInvalidChar
 	}
 	return nil
 }
