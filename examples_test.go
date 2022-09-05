@@ -10,6 +10,8 @@ import (
 	"github.com/juranki/gonetable"
 )
 
+const TABLENAME = "SchemaExample"
+
 type ExampleDocument struct {
 	ID   string
 	Name string
@@ -29,6 +31,7 @@ func (ed *ExampleDocument) Gonetable_Key() gonetable.CompositeKey {
 func ExampleSchema() {
 	cfg := MustLoadLocalDDBConfig()
 	client := dynamodb.NewFromConfig(cfg)
+	DeleteTableIfExists(context.Background(), client, TABLENAME)
 
 	schema, err := gonetable.NewSchema([]gonetable.Document{
 		&ExampleDocument{},
@@ -40,7 +43,7 @@ func ExampleSchema() {
 	table, err := client.CreateTable(
 		context.Background(),
 		&dynamodb.CreateTableInput{
-			TableName:              aws.String("ExampleTable"),
+			TableName:              aws.String(TABLENAME),
 			BillingMode:            types.BillingModePayPerRequest,
 			AttributeDefinitions:   schema.AttributeDefinitions(),
 			KeySchema:              schema.KeySchema(),
@@ -53,5 +56,5 @@ func ExampleSchema() {
 
 	fmt.Println(*table.TableDescription.TableName)
 	// Output:
-	// ExampleTable
+	// SchemaExample
 }

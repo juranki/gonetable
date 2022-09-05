@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
 func MustLoadLocalDDBConfig() aws.Config {
@@ -29,4 +30,20 @@ func MustLoadLocalDDBConfig() aws.Config {
 		panic(err)
 	}
 	return cfg
+}
+
+func DeleteTableIfExists(ctx context.Context, ddb *dynamodb.Client, tablename string) error {
+	ts, err := ddb.ListTables(ctx, &dynamodb.ListTablesInput{})
+	if err != nil {
+		return err
+	}
+	for _, n := range ts.TableNames {
+		if n == tablename {
+			_, err := ddb.DeleteTable(ctx, &dynamodb.DeleteTableInput{
+				TableName: aws.String(tablename),
+			})
+			return err
+		}
+	}
+	return nil
 }
