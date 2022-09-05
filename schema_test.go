@@ -174,7 +174,7 @@ func TestSchema_GlobalSecondaryIndexes(t *testing.T) {
 		{
 			name:       "minimal",
 			docSamples: []gonetable.Document{&MinimalDoc{}},
-			want:       []types.GlobalSecondaryIndex{},
+			want:       nil,
 		},
 		{
 			name:       "with index",

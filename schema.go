@@ -93,6 +93,9 @@ func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex {
 			},
 		})
 	}
+	if len(rv) == 0 {
+		return nil
+	}
 	return rv
 }
 
