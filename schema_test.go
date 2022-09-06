@@ -211,3 +211,76 @@ func TestSchema_GlobalSecondaryIndexes(t *testing.T) {
 		})
 	}
 }
+
+func TestSchema_Marshal(t *testing.T) {
+	type args struct {
+		docSamples []gonetable.Document
+		doc        gonetable.Document
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    map[string]types.AttributeValue
+		wantErr bool
+	}{
+		{
+			name: "minimal",
+			args: args{
+				docSamples: []gonetable.Document{&MinimalDoc{}},
+				doc: &MinimalDoc{
+					Name: "hiihaa",
+				},
+			},
+			want: map[string]types.AttributeValue{
+				"Name": MustMarshal("hiihaa"),
+				"PK":   MustMarshal("a#b"),
+				"SK":   MustMarshal("a#b"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "with index",
+			args: args{
+				docSamples: []gonetable.Document{&WithIndex{}},
+				doc: &WithIndex{
+					Name: "hiihaa",
+				},
+			},
+			want: map[string]types.AttributeValue{
+				"Name":   MustMarshal("hiihaa"),
+				"PK":     MustMarshal("a#b"),
+				"SK":     MustMarshal("a#b"),
+				"GSI1PK": MustMarshal("a#b"),
+				"GSI1SK": MustMarshal("a#b"),
+			},
+			wantErr: false,
+		},
+		{
+			name: "wrong document type",
+			args: args{
+				docSamples: []gonetable.Document{&WithIndex{}},
+				doc: &MinimalDoc{
+					Name: "hiihaa",
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s, err := gonetable.NewSchema(tt.args.docSamples)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := s.Marshal(tt.args.doc)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Schema.Marshal() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				json.NewEncoder(os.Stdout).Encode(got)
+				t.Errorf("Schema.Marshal() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -2,7 +2,8 @@ package gonetable_test
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -40,7 +41,7 @@ func ExampleSchema() {
 		panic(err)
 	}
 
-	table, err := client.CreateTable(
+	_, err = client.CreateTable(
 		context.Background(),
 		&dynamodb.CreateTableInput{
 			TableName:              aws.String(TABLENAME),
@@ -54,7 +55,24 @@ func ExampleSchema() {
 		panic(err)
 	}
 
-	fmt.Println(*table.TableDescription.TableName)
+	ed := &ExampleDocument{
+		ID:   "123456",
+		Name: "Example",
+	}
+
+	marshaled, err := schema.Marshal(ed)
+	if err != nil {
+		panic(err)
+	}
+	_, err = client.PutItem(context.Background(), &dynamodb.PutItemInput{
+		TableName: aws.String(TABLENAME),
+		Item:      marshaled,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	json.NewEncoder(os.Stdout).Encode(marshaled)
 	// Output:
-	// SchemaExample
+	// {"ID":{"Value":"123456"},"Name":{"Value":"Example"},"PK":{"Value":"ed#123456"},"SK":{"Value":"ed"}}
 }

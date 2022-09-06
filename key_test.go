@@ -1,63 +1,66 @@
 package gonetable_test
 
 import (
+	"reflect"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/juranki/gonetable"
 )
 
-func TestJoinKey(t *testing.T) {
-	type args struct {
-		segments []string
+func TestCompositeKey_Marshal(t *testing.T) {
+	type fields struct {
+		HashSegments  []string
+		RangeSegments []string
 	}
 	tests := []struct {
 		name    string
-		args    args
-		want    string
+		fields  fields
+		want    map[string]types.AttributeValue
 		wantErr bool
 	}{
 		{
-			name: "t1",
-			args: args{
-				segments: []string{"a", "b"},
+			name: "simple",
+			fields: fields{
+				HashSegments:  []string{"a", "b"},
+				RangeSegments: []string{"a", "b"},
 			},
-			want:    "a#b",
+			want: map[string]types.AttributeValue{
+				"PK": MustMarshal("a#b"),
+				"SK": MustMarshal("a#b"),
+			},
 			wantErr: false,
 		},
 		{
-			name: "t2",
-			args: args{
-				segments: []string{"#", "b"},
+			name: "error hash",
+			fields: fields{
+				HashSegments:  []string{"a#", "b"},
+				RangeSegments: []string{"a", "b"},
 			},
-			want:    "",
 			wantErr: true,
 		},
 		{
-			name: "t3",
-			args: args{
-				segments: []string{},
+			name: "error range",
+			fields: fields{
+				HashSegments:  []string{"a", "b"},
+				RangeSegments: []string{"a#", "b"},
 			},
-			want:    "",
-			wantErr: true,
-		},
-		{
-			name: "t4",
-			args: args{
-				segments: nil,
-			},
-			want:    "",
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := gonetable.JoinKeySegments(tt.args.segments)
+			k := gonetable.CompositeKey{
+				HashSegments:  tt.fields.HashSegments,
+				RangeSegments: tt.fields.RangeSegments,
+			}
+			got, err := k.Marshal()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("JoinKey() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("CompositeKey.Marshal() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got != tt.want {
-				t.Errorf("JoinKey() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CompositeKey.Marshal() = %v, want %v", got, tt.want)
 			}
 		})
 	}

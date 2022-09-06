@@ -39,7 +39,7 @@ type WithIndex struct {
 	Name string
 }
 
-func (sd1 *WithIndex) Gonetable_TypeID() string { return "sd1" }
+func (sd1 *WithIndex) Gonetable_TypeID() string { return "wi1" }
 func (sd1 *WithIndex) Gonetable_Key() gonetable.CompositeKey {
 	return gonetable.CompositeKey{
 		HashSegments:  []string{"a", "b"},

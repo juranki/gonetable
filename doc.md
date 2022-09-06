@@ -13,14 +13,15 @@ For more information about single table design see https://youtu.be/HaEPXoXVf2k
 ## Index
 
 - [Variables](<#variables>)
-- [func JoinKeySegments(segments []string) (string, error)](<#func-joinkeysegments>)
 - [type CompositeKey](<#type-compositekey>)
+  - [func (k CompositeKey) Marshal() (map[string]types.AttributeValue, error)](<#func-compositekey-marshal>)
 - [type Document](<#type-document>)
 - [type Schema](<#type-schema>)
   - [func NewSchema(docSamples []Document) (*Schema, error)](<#func-newschema>)
   - [func (s *Schema) AttributeDefinitions() []types.AttributeDefinition](<#func-schema-attributedefinitions>)
   - [func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex](<#func-schema-globalsecondaryindexes>)
   - [func (s *Schema) KeySchema() []types.KeySchemaElement](<#func-schema-keyschema>)
+  - [func (s *Schema) Marshal(doc Document) (map[string]types.AttributeValue, error)](<#func-schema-marshal>)
 
 
 ## Variables
@@ -38,16 +39,12 @@ var (
     ErrNoDocSamples    = errors.New("at least one document sample required")
     ErrDuplicateTypeID = errors.New("multiple document samples with same type id")
     ErrIndexName       = errors.New("invalid index name, must match ^[a-zA-Z0-9_.-]{3,255}$")
+    ErrUnknownType     = errors.New("document type not registered in schema")
+    ErrKeyMethod       = errors.New("key method didn't return composite key")
 )
 ```
 
-## func [JoinKeySegments](<https://github.com/juranki/gonetable/blob/main/key.go#L19>)
-
-```go
-func JoinKeySegments(segments []string) (string, error)
-```
-
-## type [CompositeKey](<https://github.com/juranki/gonetable/blob/main/key.go#L14-L17>)
+## type [CompositeKey](<https://github.com/juranki/gonetable/blob/main/key.go#L17-L20>)
 
 ```go
 type CompositeKey struct {
@@ -56,7 +53,13 @@ type CompositeKey struct {
 }
 ```
 
-## type [Document](<https://github.com/juranki/gonetable/blob/main/document.go#L17-L20>)
+### func \(CompositeKey\) [Marshal](<https://github.com/juranki/gonetable/blob/main/key.go#L22>)
+
+```go
+func (k CompositeKey) Marshal() (map[string]types.AttributeValue, error)
+```
+
+## type [Document](<https://github.com/juranki/gonetable/blob/main/document.go#L14-L17>)
 
 Implement Document interface for the structs you want to store to the DDB table.
 
@@ -67,11 +70,10 @@ Gonetable_Key() returns the key that uniquely identifies the document.
 Gonetable_TypeID() returns a string that specifies the type of the document.
 ```
 
-TODO: Additionally you can specify other functions with Gonetable\_ \-prefix to specify additional indexes, and fields that are computed when document is saved:
+You can specify additional indeces with methods that return composite keys for them. They must be named with following pattern
 
 ```
-Gonetable_[Indexname]Key() returns composite key for additional index
-Gonetable_Computed[Fieldname]() returns value for a computed field
+Gonetable_[Index]Key() returns composite key for Index
 ```
 
 ```go
@@ -81,7 +83,7 @@ type Document interface {
 }
 ```
 
-## type [Schema](<https://github.com/juranki/gonetable/blob/main/schema.go#L22-L25>)
+## type [Schema](<https://github.com/juranki/gonetable/blob/main/schema.go#L25-L28>)
 
 ```go
 type Schema struct {
@@ -97,13 +99,16 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/juranki/gonetable"
 )
+
+const TABLENAME = "SchemaExample"
 
 type ExampleDocument struct {
 	ID   string
@@ -124,6 +129,7 @@ func (ed *ExampleDocument) Gonetable_Key() gonetable.CompositeKey {
 func main() {
 	cfg := MustLoadLocalDDBConfig()
 	client := dynamodb.NewFromConfig(cfg)
+	DeleteTableIfExists(context.Background(), client, TABLENAME)
 
 	schema, err := gonetable.NewSchema([]gonetable.Document{
 		&ExampleDocument{},
@@ -132,10 +138,10 @@ func main() {
 		panic(err)
 	}
 
-	table, err := client.CreateTable(
+	_, err = client.CreateTable(
 		context.Background(),
 		&dynamodb.CreateTableInput{
-			TableName:              aws.String("ExampleTable"),
+			TableName:              aws.String(TABLENAME),
 			BillingMode:            types.BillingModePayPerRequest,
 			AttributeDefinitions:   schema.AttributeDefinitions(),
 			KeySchema:              schema.KeySchema(),
@@ -146,26 +152,43 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(*table.TableDescription.TableName)
+	ed := &ExampleDocument{
+		ID:   "123456",
+		Name: "Example",
+	}
+
+	marshaled, err := schema.Marshal(ed)
+	if err != nil {
+		panic(err)
+	}
+	_, err = client.PutItem(context.Background(), &dynamodb.PutItemInput{
+		TableName: aws.String(TABLENAME),
+		Item:      marshaled,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	json.NewEncoder(os.Stdout).Encode(marshaled)
 }
 ```
 
 #### Output
 
 ```
-ExampleTable
+{"ID":{"Value":"123456"},"Name":{"Value":"Example"},"PK":{"Value":"ed#123456"},"SK":{"Value":"ed"}}
 ```
 
 </p>
 </details>
 
-### func [NewSchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L27>)
+### func [NewSchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L30>)
 
 ```go
 func NewSchema(docSamples []Document) (*Schema, error)
 ```
 
-### func \(\*Schema\) [AttributeDefinitions](<https://github.com/juranki/gonetable/blob/main/schema.go#L64>)
+### func \(\*Schema\) [AttributeDefinitions](<https://github.com/juranki/gonetable/blob/main/schema.go#L69>)
 
 ```go
 func (s *Schema) AttributeDefinitions() []types.AttributeDefinition
@@ -173,7 +196,7 @@ func (s *Schema) AttributeDefinitions() []types.AttributeDefinition
 
 Returns attribute definitions for all partition and sort keys fields of the table and GSIs
 
-### func \(\*Schema\) [GlobalSecondaryIndexes](<https://github.com/juranki/gonetable/blob/main/schema.go#L76>)
+### func \(\*Schema\) [GlobalSecondaryIndexes](<https://github.com/juranki/gonetable/blob/main/schema.go#L81>)
 
 ```go
 func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex
@@ -181,13 +204,23 @@ func (s *Schema) GlobalSecondaryIndexes() []types.GlobalSecondaryIndex
 
 Returns definitions for GSIs
 
-### func \(\*Schema\) [KeySchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L104>)
+### func \(\*Schema\) [KeySchema](<https://github.com/juranki/gonetable/blob/main/schema.go#L109>)
 
 ```go
 func (s *Schema) KeySchema() []types.KeySchemaElement
 ```
 
 Returns key schema that is always the same. Hash and range keys named PK and SK.
+
+### func \(\*Schema\) [Marshal](<https://github.com/juranki/gonetable/blob/main/schema.go#L126>)
+
+```go
+func (s *Schema) Marshal(doc Document) (map[string]types.AttributeValue, error)
+```
+
+Marshals document to attribute value map.
+
+Uses documents Gonetable\_\*Key methods to populate fiels for composite keys.
 
 
 

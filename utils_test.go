@@ -6,7 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 func MustLoadLocalDDBConfig() aws.Config {
@@ -46,4 +48,12 @@ func DeleteTableIfExists(ctx context.Context, ddb *dynamodb.Client, tablename st
 		}
 	}
 	return nil
+}
+
+func MustMarshal(in interface{}) types.AttributeValue {
+	v, err := attributevalue.Marshal(in)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }

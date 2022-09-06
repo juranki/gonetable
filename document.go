@@ -7,13 +7,10 @@ package gonetable
 //	Gonetable_Key() returns the key that uniquely identifies the document.
 //	Gonetable_TypeID() returns a string that specifies the type of the document.
 //
-// TODO:
-// Additionally you can specify other functions with Gonetable_ -prefix to
-// specify additional indexes, and fields that are computed when
-// document is saved:
+// You can specify additional indeces with methods that return composite
+// keys for them. They must be named with following pattern
 //
-//	Gonetable_[Indexname]Key() returns composite key for additional index
-//	Gonetable_Computed[Fieldname]() returns value for a computed field
+//	Gonetable_[Index]Key() returns composite key for Index
 type Document interface {
 	Gonetable_Key() CompositeKey
 	Gonetable_TypeID() string
