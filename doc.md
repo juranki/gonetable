@@ -176,7 +176,7 @@ func main() {
 #### Output
 
 ```
-{"ID":{"Value":"123456"},"Name":{"Value":"Example"},"PK":{"Value":"ed#123456"},"SK":{"Value":"ed"}}
+{"ID":{"Value":"123456"},"Name":{"Value":"Example"},"PK":{"Value":"ed#123456"},"SK":{"Value":"ed"},"_Type":{"Value":"ed"}}
 ```
 
 </p>
@@ -212,7 +212,7 @@ func (s *Schema) KeySchema() []types.KeySchemaElement
 
 Returns key schema that is always the same. Hash and range keys named PK and SK.
 
-### func \(\*Schema\) [Marshal](<https://github.com/juranki/gonetable/blob/main/schema.go#L126>)
+### func \(\*Schema\) [Marshal](<https://github.com/juranki/gonetable/blob/main/schema.go#L127>)
 
 ```go
 func (s *Schema) Marshal(doc Document) (map[string]types.AttributeValue, error)
@@ -220,7 +220,7 @@ func (s *Schema) Marshal(doc Document) (map[string]types.AttributeValue, error)
 
 Marshals document to attribute value map.
 
-Uses documents Gonetable\_\*Key methods to populate fiels for composite keys.
+Uses documents Gonetable\_\*Key methods to populate fiels for composite keys, and Gonetable\_TypeID to include document type to the marshaled value.
 
 
 

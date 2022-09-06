@@ -122,9 +122,8 @@ func (s *Schema) KeySchema() []types.KeySchemaElement {
 // Marshals document to attribute value map.
 //
 // Uses documents Gonetable_*Key methods to populate fiels
-// for composite keys.
-//
-// TODO: add type
+// for composite keys, and Gonetable_TypeID to include
+// document type to the marshaled value.
 func (s *Schema) Marshal(doc Document) (map[string]types.AttributeValue, error) {
 	indeces, exists := s.docTypes[doc.Gonetable_TypeID()]
 	if !exists {
@@ -149,7 +148,8 @@ func (s *Schema) Marshal(doc Document) (map[string]types.AttributeValue, error) 
 			av[fmt.Sprintf("%s%s", idx, k)] = v
 		}
 	}
-	return av, nil
+	av["_Type"], err = attributevalue.Marshal(doc.Gonetable_TypeID())
+	return av, err
 }
 
 func getIndexNames(documentType reflect.Type) []string {

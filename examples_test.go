@@ -74,5 +74,5 @@ func ExampleSchema() {
 
 	json.NewEncoder(os.Stdout).Encode(marshaled)
 	// Output:
-	// {"ID":{"Value":"123456"},"Name":{"Value":"Example"},"PK":{"Value":"ed#123456"},"SK":{"Value":"ed"}}
+	// {"ID":{"Value":"123456"},"Name":{"Value":"Example"},"PK":{"Value":"ed#123456"},"SK":{"Value":"ed"},"_Type":{"Value":"ed"}}
 }
