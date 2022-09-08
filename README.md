@@ -1,12 +1,9 @@
 # gonetable
 
-Experimenting with:
-- go reflection
-- generics, if good use case comes accross
+Experimental utility for handling composite keys with single-table design.
 
-With luck, produce a set of utilities for one/single table design.
 https://www.youtube.com/watch?v=HaEPXoXVf2k
 
-## Package documentation
+## Package
 
 [github.com/juranki/gonetable](doc.md)
