@@ -2,11 +2,13 @@ package gonetable_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/juranki/gonetable"
 )
@@ -249,10 +251,10 @@ func TestSchema_Marshal(t *testing.T) {
 			},
 			want: map[string]types.AttributeValue{
 				"Name":   MustMarshal("hiihaa"),
-				"PK":     MustMarshal("a#b"),
-				"SK":     MustMarshal("a#b"),
-				"GSI1PK": MustMarshal("a#b"),
-				"GSI1SK": MustMarshal("a#b"),
+				"PK":     MustMarshal("wi#hiihaa"),
+				"SK":     MustMarshal("wi"),
+				"GSI1PK": MustMarshal("wi#hiihaa"),
+				"GSI1SK": MustMarshal("wi"),
 				"_Type":  MustMarshal("wi1"),
 			},
 			wantErr: false,
@@ -285,4 +287,67 @@ func TestSchema_Marshal(t *testing.T) {
 			}
 		})
 	}
+}
+
+func BenchmarkSchema_Marshal(b *testing.B) {
+	s, err := gonetable.NewSchema([]gonetable.Document{&WithIndex{}})
+	if err != nil {
+		b.Fatal(err)
+	}
+	d := &WithIndex{
+		Name: "withindex",
+	}
+	for i := 0; i < 1000; i++ {
+		_, err = s.Marshal(d)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkSchema_MarshalAlternative(b *testing.B) {
+	s := &AlternativeSchema{}
+	d := &WithIndex{
+		Name: "withindex",
+	}
+	for i := 0; i < 1000; i++ {
+		_, err := s.alternativeMarshal(d)
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+type AlternativeSchema struct {
+}
+
+// this would be generated for each document type
+func (s *AlternativeSchema) alternativeMarshal(doc *WithIndex) (map[string]types.AttributeValue, error) {
+	av, err := attributevalue.MarshalMap(doc)
+	if err != nil {
+		return nil, err
+	}
+	docType := doc.Gonetable_TypeID()
+	av["_Type"], err = attributevalue.Marshal(docType)
+	if err != nil {
+		return nil, err
+	}
+	cKey := doc.Gonetable_Key()
+	cKeyAV, err := cKey.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range cKeyAV {
+		av[k] = v
+	}
+	cGSI1Key := doc.Gonetable_GSI1Key()
+	cGSI1KeyAV, err := cGSI1Key.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	for k, v := range cGSI1KeyAV {
+		av[fmt.Sprintf("GSI1%s", k)] = v
+	}
+
+	return av, nil
 }

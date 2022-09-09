@@ -42,13 +42,13 @@ type WithIndex struct {
 func (sd1 *WithIndex) Gonetable_TypeID() string { return "wi1" }
 func (sd1 *WithIndex) Gonetable_Key() gonetable.CompositeKey {
 	return gonetable.CompositeKey{
-		HashSegments:  []string{"a", "b"},
-		RangeSegments: []string{"a", "b"},
+		HashSegments:  []string{"wi", sd1.Name},
+		RangeSegments: []string{"wi"},
 	}
 }
 func (sd1 *WithIndex) Gonetable_GSI1Key() gonetable.CompositeKey {
 	return gonetable.CompositeKey{
-		HashSegments:  []string{"a", "b"},
-		RangeSegments: []string{"a", "b"},
+		HashSegments:  []string{"wi", sd1.Name},
+		RangeSegments: []string{"wi"},
 	}
 }
